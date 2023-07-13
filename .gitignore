@@ -162,3 +162,5 @@ cython_debug/
 .env
 wandb
 Building LLM-Powered Apps_W&B
+vector_store
+.chroma
