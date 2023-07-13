@@ -160,5 +160,5 @@ cython_debug/
 #.idea/
 
 .env
-
+wandb
 Building LLM-Powered Apps_W&B
