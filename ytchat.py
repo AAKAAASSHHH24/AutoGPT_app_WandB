@@ -3,14 +3,10 @@ from streamlit_chat import message
 from streamlit_extras.colored_header import colored_header
 from streamlit_extras.add_vertical_space import add_vertical_space
 
-st.title('🎈 AI YOUTUBE CHAT')
-
-st.write('Wassup AI WORLD!')
-
 from langchain.document_loaders import YoutubeLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.embeddings.openai import OpenAIEmbeddings
-from langchain.vectorstores import FAISS
+from langchain.vectorstores import Chroma,FAISS
 from langchain.chat_models import ChatOpenAI
 from langchain.chains import LLMChain
 from dotenv import find_dotenv, load_dotenv
@@ -24,6 +20,10 @@ import textwrap
 load_dotenv(find_dotenv())
 embeddings = OpenAIEmbeddings()
 
+
+st.title('🎈 AI YOUTUBE CHAT')
+
+st.write('Wassup AI WORLD!')
 
 def create_db_from_youtube_video_url(video_url):
     loader = YoutubeLoader.from_youtube_url(video_url)
@@ -83,8 +83,6 @@ def get_response_from_query(db, query, k=4):
 # Sidebar contents
 with st.sidebar:
     st.title('💬 Chat with a youtube video')
-    
-    video_url = "https://www.youtube.com/watch?v=FeIIaJUN-4A&ab_channel=SantrelMedia"
     st.header('YOUTUBE VIDEO YOU WANT TO CHAT WITH')
     video_url = st.text_input('Enter VIDEO LINK:')
     
@@ -92,12 +90,15 @@ with st.sidebar:
     ## About
     This app is an LLM-powered chatbot built using:
     - [Streamlit](https://streamlit.io/)
-    - [Langchain]()
+    - [Langchain](https://langchain-langchain.vercel.app/docs/get_started)
     ''')
     st.write('Made with ❤️ by [Akash Rakshit](https://www.linkedin.com/in/akash-rakshit-020761175/)')
 
-if video_url is not None:
+try:
     db = create_db_from_youtube_video_url(video_url)
+except Exception as e:
+    st.image('YouTube-Logo.wine.png')
+
 
 
 # Generate empty lists for generated and past.
@@ -126,6 +127,7 @@ with input_container:
 ## Conditional display of AI generated responses as a function of user provided prompts
 with response_container:
     if user_input:
+        db = create_db_from_youtube_video_url(video_url)
         response = get_response_from_query(db, user_input)
         st.session_state.past.append(user_input)
         st.session_state.generated.append(response)
