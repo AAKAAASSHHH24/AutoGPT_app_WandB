@@ -35,7 +35,7 @@ def create_db_from_youtube_video_url(video_url):
     try:
         loader = YoutubeLoader.from_youtube_url(video_url)
     except:
-        loader = YoutubeLoader.from_youtube_url(video_url.split('youtu.be/')[-1])
+        loader = YoutubeLoader.from_youtube_url(video_id = video_url.split('youtu.be/')[-1])
     transcript = loader.load()
 
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=100)
