@@ -92,7 +92,13 @@ with st.sidebar:
     st.title('💬 Chat with a youtube video')
     st.header('YOUTUBE VIDEO YOU WANT TO CHAT WITH')
     video_url = st.text_input('Enter VIDEO LINK:')
-    
+
+    if video_url[0:24]=='https://www.youtube.com/':
+        video_url=video_url
+    else:
+        actual_url = 'https://www.youtube.com/watch?v='
+        actual_url = actual_url + video_url.split('youtu.be/')[-1]
+        video_url = actual_url
     st.markdown('''
     ## About
     This app is an LLM-powered chatbot built using:
