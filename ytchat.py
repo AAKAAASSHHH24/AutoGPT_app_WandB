@@ -96,9 +96,9 @@ with st.sidebar:
     if video_url[0:24]=='https://www.youtube.com/':
         video_url=video_url
     else:
-        actual_url = 'https://www.youtube.com/watch?v='
-        actual_url = actual_url + video_url.split('youtu.be/')[-1]
-        video_url = actual_url
+        #actual_url = 'https://www.youtube.com/watch?v='
+        video_url = video_url.split('youtu.be/')[-1]
+        #video_url = actual_url
     st.markdown('''
     ## About
     This app is an LLM-powered chatbot built using:
