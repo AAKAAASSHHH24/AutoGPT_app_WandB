@@ -32,7 +32,10 @@ st.title('🎈 AI YOUTUBE CHAT')
 st.write('Wassup AI WORLD!')
 
 def create_db_from_youtube_video_url(video_url):
-    loader = YoutubeLoader.from_youtube_url(video_url)
+    try:
+        loader = YoutubeLoader.from_youtube_url(video_url)
+    except:
+        loader = YoutubeLoader.from_youtube_url(video_url.split('youtu.be/')[-1])
     transcript = loader.load()
 
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=100)
@@ -96,9 +99,7 @@ with st.sidebar:
     if video_url[0:24]=='https://www.youtube.com/':
         video_url=video_url
     else:
-        #actual_url = 'https://www.youtube.com/watch?v='
         video_url = video_url.split('youtu.be/')[-1]
-        #video_url = actual_url
     st.markdown('''
     ## About
     This app is an LLM-powered chatbot built using:
