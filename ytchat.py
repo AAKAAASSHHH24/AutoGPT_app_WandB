@@ -6,7 +6,7 @@ from streamlit_extras.add_vertical_space import add_vertical_space
 from langchain.document_loaders import YoutubeLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.embeddings.openai import OpenAIEmbeddings
-from langchain.vectorstores import Chroma,FAISS
+from langchain.vectorstores import Chroma
 from langchain.chat_models import ChatOpenAI
 from langchain.chains import LLMChain
 from dotenv import find_dotenv, load_dotenv
@@ -16,9 +16,15 @@ from langchain.prompts.chat import (
     HumanMessagePromptTemplate,
 )
 import textwrap
+import os
 
 load_dotenv(find_dotenv())
-embeddings = OpenAIEmbeddings()
+try:
+    embeddings = OpenAIEmbeddings()
+except Exception as e:
+    os.environ['OPENAI_API_KEY'] = st.secrets['OPENAI_API_KEY']
+    embeddings = OpenAIEmbeddings()
+
 
 
 st.title('🎈 AI YOUTUBE CHAT')
@@ -29,10 +35,10 @@ def create_db_from_youtube_video_url(video_url):
     loader = YoutubeLoader.from_youtube_url(video_url)
     transcript = loader.load()
 
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=100)
     docs = text_splitter.split_documents(transcript)
 
-    db = FAISS.from_documents(docs, embeddings)
+    db = Chroma.from_documents(documents = docs,embedding = embeddings)
     
     if db:
         return db
@@ -40,9 +46,9 @@ def create_db_from_youtube_video_url(video_url):
         return None
 
 
-def get_response_from_query(db, query, k=4):
+def get_response_from_query(db, query, k=8):
     """
-    gpt-3.5-turbo can handle up to 4097 tokens. Setting the chunksize to 1000 and k to 4 maximizes
+    gpt-3.5-turbo can handle up to 4097 tokens. Setting the chunksize to 500 and k to 8 maximizes
     the number of tokens to analyze.
     """
 
@@ -56,6 +62,7 @@ def get_response_from_query(db, query, k=4):
         You are a helpful assistant that that can answer questions about youtube videos 
         based on the video's transcript: {docs}
         
+        You may use markdown or bullet points format as per convenience and user question to answer the questions.
         Only use the factual information from the transcript to answer the question.
         
         If you feel like you don't have enough information to answer the question, say "I don't know".
@@ -100,8 +107,6 @@ except Exception as e:
     st.image('YouTube-Logo.wine.png')
 
 
-
-# Generate empty lists for generated and past.
 ## generated stores AI generated responses
 if 'generated' not in st.session_state:
     st.session_state['generated'] = ["I am AI YOUTUBE CHAT, How may I help you?"]

@@ -19,4 +19,6 @@ platformdirs==2.2.0
 tomli==2.0.1
 tomlkit==0.10.1
 typing-extensions==4.6.0
-faiss-cpu
+gradio
+pathlib
+typing
