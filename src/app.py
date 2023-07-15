@@ -4,7 +4,7 @@ from types import SimpleNamespace
 
 import gradio as gr
 import wandb
-from chain import get_answer, load_chain, load_vector_store
+from chains import get_answer, load_chain, load_vector_store
 from config import default_config
 
 
@@ -32,7 +32,7 @@ class Chat:
     def __call__(
         self,
         question: str,
-        history: list[tuple[str, str]] | None = None,
+        history: list[tuple[str, str]] ,
         openai_api_key: str = None,
     ):
         """Answer a question about a youtube video chosen by user using the LangChain QA chain and vector store retriever.
@@ -84,19 +84,19 @@ with gr.Blocks() as demo:
         "
         >
         <h1 style="font-weight: 900; margin-bottom: 7px; margin-top: 5px;">
-            Wandb QandA Bot
+            AI YOUTUBE CHAT
         </h1>
         </div>
         <p style="margin-bottom: 10px; font-size: 94%">
-        Hi, I'm a wandb documentaion Q and A bot, start by typing in your OpenAI API key, questions/issues you have related to wandb usage and then press enter.<br>
+        Hi, I'm a AI YOUTUBE VIDEO CHAT, start by typing in your OpenAI API key, questions/issues you have related to wandb usage and then press enter.<br>
         Built using <a href="https://langchain.readthedocs.io/en/latest/" target="_blank">LangChain</a> and <a href="https://github.com/gradio-app/gradio" target="_blank">Gradio Github repo</a>
         </p>
     </div>"""
     )
     with gr.Row():
         question = gr.Textbox(
-            label="Type in your questions about wandb here and press Enter!",
-            placeholder="How do i log images with wandb ?",
+            label="Type in your questions about the YouTube video here and press Enter!",
+            placeholder="What is this video about?",
         )
         openai_api_key = gr.Textbox(
             type="password",
@@ -114,6 +114,4 @@ with gr.Blocks() as demo:
 
 
 if __name__ == "__main__":
-    demo.queue().launch(
-        share=False, server_name="0.0.0.0", server_port=8884, show_error=True
-    )
+    demo.queue().launch(share=False)

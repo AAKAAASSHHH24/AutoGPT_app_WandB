@@ -58,7 +58,6 @@ def load_chain(wandb_run: wandb.run, vector_store: Chroma, openai_api_key: str):
         llm=llm,
         chain_type="stuff",
         retriever=retriever,
-        combine_docs_chain_kwargs={"prompt": qa_prompt},
         return_source_documents=True,
     )
     return qa_chain
