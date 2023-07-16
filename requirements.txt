@@ -22,3 +22,4 @@ typing-extensions==4.6.0
 gradio
 pathlib
 typing
+youtube_dl

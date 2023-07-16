@@ -17,6 +17,8 @@ from langchain.prompts.chat import (
 )
 import textwrap
 import os
+import youtube_dl
+
 
 load_dotenv(find_dotenv())
 try:
@@ -36,7 +38,13 @@ def create_db_from_youtube_video_url(video_url):
         loader = YoutubeLoader.from_youtube_url(video_url)
     except:
         loader = YoutubeLoader.from_youtube_url(video_id = video_url.split('youtu.be/')[-1])
-    transcript = loader.load()
+    try:
+        transcript = loader.load()
+    except:
+        youtube_dl_options = {"writesubtitles": True}
+
+        with youtube_dl.YoutubeDL(youtube_dl_options) as youtube_dl_client:
+            transcript= youtube_dl_client.download([video_url])
 
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=100)
     docs = text_splitter.split_documents(transcript)
