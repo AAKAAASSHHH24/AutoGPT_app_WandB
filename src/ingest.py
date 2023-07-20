@@ -6,6 +6,8 @@ import os
 import pathlib
 from typing import List, Tuple
 
+import youtube_dl
+
 import langchain
 import wandb
 from langchain.cache import SQLiteCache
@@ -33,8 +35,17 @@ def load_documents(video_url: str) -> str:
         str: Trancsript of the video
         
     """
-    loader = YoutubeLoader.from_youtube_url(video_url)
-    transcript = loader.load()
+    try:
+        loader = YoutubeLoader.from_youtube_url(video_url)
+    except:
+        loader = YoutubeLoader.from_youtube_url(video_id = video_url.split('youtu.be/')[-1])
+    try:
+        transcript = loader.load()
+    except:
+        youtube_dl_options = {"writesubtitles": True}
+
+        with youtube_dl.YoutubeDL(youtube_dl_options) as youtube_dl_client:
+            transcript= youtube_dl_client.download([video_url])
       
     return transcript
 
@@ -150,12 +161,6 @@ def ingest_data(
 def get_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--video_url",
-        type=str,
-        required=True,
-        help="The link of the youtube url",
-    )
-    parser.add_argument(
         "--chunk_size",
         type=int,
         default=500,
@@ -189,12 +194,12 @@ def get_parser():
     return parser
 
 
-def main():
+def main(video_url):
     parser = get_parser()
     args = parser.parse_args()
     run = wandb.init(project=args.wandb_project, config=args)
     documents, vector_store = ingest_data(
-        video_url=args.video_url,
+        video_url=video_url,
         chunk_size=args.chunk_size,
         chunk_overlap=args.chunk_overlap,
         vector_store_path=args.vector_store,
@@ -205,5 +210,5 @@ def main():
     run.finish()
 
 
-if __name__ == "__main__":
-    main()
+#if __name__ == "__main__":
+    #main()

@@ -2,116 +2,102 @@
 import os
 from types import SimpleNamespace
 
-import gradio as gr
+import streamlit as st
+from streamlit_chat import message
+from streamlit_extras.colored_header import colored_header
+from streamlit_extras.add_vertical_space import add_vertical_space
+
 import wandb
 from chains import get_answer, load_chain, load_vector_store
 from config import default_config
+from ingest import main
+
+"""if openai_api_key is not None:
+    openai_key = openai_api_key
+elif os.environ["OPENAI_API_KEY"]:
+    openai_key = os.environ["OPENAI_API_KEY"]
+else:
+    raise ValueError(
+        "Please provide your OpenAI API key as an argument or set the OPENAI_API_KEY environment variable"
+    )"""
 
 
-class Chat:
-    """A chatbot interface that persists the vectorstore and chain between calls."""
+st.title('🎈 AI YOUTUBE CHAT')
 
-    def __init__(
-        self,
-        config: SimpleNamespace,
-    ):
-        """Initialize the chatbot.
-        Args:
-            config (SimpleNamespace): The configuration.
-        """
-        self.config = config
-        self.wandb_run = wandb.init(
-            project=self.config.project,
-            entity=self.config.entity,
-            job_type=self.config.job_type,
-            config=self.config,
+st.write('Wassup AI WORLD!')
+
+# Sidebar contents
+with st.sidebar:
+    st.title('💬 Chat with a youtube video')
+    st.header('YOUTUBE VIDEO YOU WANT TO CHAT WITH')
+    video_url = st.text_input('Enter VIDEO LINK:')
+
+    if video_url[0:24]=='https://www.youtube.com/':
+        video_url=video_url
+    else:
+        video_url = video_url.split('youtu.be/')[-1]
+    st.markdown('''
+    ## About
+    This app is an LLM-powered chatbot built using:
+    - [Streamlit](https://streamlit.io/)
+    - [Langchain](https://langchain-langchain.vercel.app/docs/get_started)
+    ''')
+    st.write('Made with ❤️ by [Akash Rakshit](https://www.linkedin.com/in/akash-rakshit-020761175/)')
+
+
+try:
+    main(video_url)
+except Exception as e:
+    st.image('YouTube-Logo.wine.png')
+
+## generated stores AI generated responses
+if 'generated' not in st.session_state:
+    st.session_state['generated'] = ["I am AI YOUTUBE CHAT, How may I help you?"]
+## past stores User's questions
+if 'past' not in st.session_state:
+    st.session_state['past'] = ['Hi!']
+
+# Layout of input/response containers
+input_container = st.container()
+colored_header(label='', description='', color_name='red-30')
+response_container = st.container()
+
+# User input
+## Function for taking user provided prompt as input
+def get_text():
+    input_text = st.text_input("You: ", "", key="input")
+    return input_text
+
+## Applying the user input box
+with input_container:
+    user_input = get_text()
+
+## Conditional display of AI generated responses as a function of user provided prompts
+with response_container:
+    if user_input:
+        wandb_run = wandb.init(
+            project=default_config.project,
+            entity=default_config.entity,
+            job_type=default_config.job_type,
+            config=default_config,
         )
-        self.vector_store = None
-        self.chain = None
-
-    def __call__(
-        self,
-        question: str,
-        history: list[tuple[str, str]] ,
-        openai_api_key: str = None,
-    ):
-        """Answer a question about a youtube video chosen by user using the LangChain QA chain and vector store retriever.
-        Args:
-            question (str): The question to answer.
-            history (list[tuple[str, str]] | None, optional): The chat history. Defaults to None.
-            openai_api_key (str, optional): The OpenAI API key. Defaults to None.
-        Returns:
-            list[tuple[str, str]], list[tuple[str, str]]: The chat history before and after the question is answered.
-        """
-        if openai_api_key is not None:
-            openai_key = openai_api_key
-        elif os.environ["OPENAI_API_KEY"]:
-            openai_key = os.environ["OPENAI_API_KEY"]
-        else:
-            raise ValueError(
-                "Please provide your OpenAI API key as an argument or set the OPENAI_API_KEY environment variable"
+        vector_store = load_vector_store(
+                wandb_run=wandb_run, openai_api_key=openai_key
             )
-
-        if self.vector_store is None:
-            self.vector_store = load_vector_store(
-                wandb_run=self.wandb_run, openai_api_key=openai_key
+        chain = load_chain(
+                wandb_run=wandb_run, vector_store=vector_store, openai_api_key=openai_key
             )
-        if self.chain is None:
-            self.chain = load_chain(
-                self.wandb_run, self.vector_store, openai_api_key=openai_key
-            )
-
-        history = history or []
-        question = question.lower()
+        user_input = user_input.lower()
         response = get_answer(
-            chain=self.chain,
-            question=question,
+            chain=chain,
+            question=user_input,
             chat_history=history,
         )
-        history.append((question, response))
-        return history, history
-
-
-with gr.Blocks() as demo:
-    gr.HTML(
-        """<div style="text-align: center; max-width: 700px; margin: 0 auto;">
-        <div
-        style="
-            display: inline-flex;
-            align-items: center;
-            gap: 0.8rem;
-            font-size: 1.75rem;
-        "
-        >
-        <h1 style="font-weight: 900; margin-bottom: 7px; margin-top: 5px;">
-            AI YOUTUBE CHAT
-        </h1>
-        </div>
-        <p style="margin-bottom: 10px; font-size: 94%">
-        Hi, I'm a AI YOUTUBE VIDEO CHAT, start by typing in your OpenAI API key, questions/issues you have related to wandb usage and then press enter.<br>
-        Built using <a href="https://langchain.readthedocs.io/en/latest/" target="_blank">LangChain</a> and <a href="https://github.com/gradio-app/gradio" target="_blank">Gradio Github repo</a>
-        </p>
-    </div>"""
-    )
-    with gr.Row():
-        question = gr.Textbox(
-            label="Type in your questions about the YouTube video here and press Enter!",
-            placeholder="What is this video about?",
-        )
-        openai_api_key = gr.Textbox(
-            type="password",
-            label="Enter your OpenAI API key here",
-        )
-    state = gr.State()
-    chatbot = gr.Chatbot()
-    question.submit(
-        Chat(
-            config=default_config,
-        ),
-        [question, state, openai_api_key],
-        [chatbot, state],
-    )
-
-
-if __name__ == "__main__":
-    demo.queue().launch(share=False)
+        st.session_state.past.append(user_input)
+        st.session_state.generated.append(response)
+        
+    if st.session_state['generated']:
+        for i in range(len(st.session_state['generated'])):
+            message(st.session_state['past'][i], is_user=True, key=str(i) + '_user')
+            message(st.session_state["generated"][i], key=str(i))
+                
