@@ -100,7 +100,7 @@ def log_dataset(documents: List[Document], run: "wandb.run"):
         documents (List[Document]): A list of documents to log to a wandb artifact
         run (wandb.run): The wandb run to log the artifact to.
     """
-    document_artifact = wandb.Artifact(name="documentation_dataset", type="dataset")
+    document_artifact = wandb.Artifact(name="transcript_dataset", type="dataset")
     with document_artifact.new_file("documents.json") as f:
         for document in documents:
             f.write(document.json() + "\n")
@@ -161,6 +161,11 @@ def ingest_data(
 def get_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument(
+        "--video_url",
+        type=str,
+        help="The link of the youtube url",
+    )
+    parser.add_argument(
         "--chunk_size",
         type=int,
         default=500,
@@ -197,6 +202,7 @@ def get_parser():
 def main(video_url):
     parser = get_parser()
     args = parser.parse_args()
+    args.video_url = video_url
     run = wandb.init(project=args.wandb_project, config=args)
     documents, vector_store = ingest_data(
         video_url=video_url,

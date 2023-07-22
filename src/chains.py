@@ -80,5 +80,5 @@ def get_answer(
         inputs={"question": question, "chat_history": chat_history},
         return_only_outputs=True,
     )
-    response = f"Answer:\t{result['answer']}"
+    response = f"\t{result['answer']}"
     return response

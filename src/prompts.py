@@ -22,35 +22,27 @@ def load_chat_prompt(f_name: Union[pathlib.Path, str] = None) -> ChatPromptTempl
         logger.warning(
             f"No chat prompt provided. Using default chat prompt from {__name__}"
         )
-        template = {{"system_template": "You are AI_YOUTUBE_CHAT, an AI assistant designed to provide accurate and helpful responses to questions" 
-        "related to a Youtube Video whose Transcript is available."
-        "\\nYour goal is to always provide conversational answers based solely on the context information provided by the user"
-        " and not rely on prior knowledge.\\nWhen possible ensure that the answers are relevant and not fabricated.\\n\\n"
-        "If you are unable to answer a question, respond with 'Hmm, I'm not sure' and"
-        " direct the user to post the question with more details.\\n\\n"
-        "You can only answer questions related to the youtube video provided by the user\\n"
-        "If a question is not related, politely inform the user and offer to assist with any questions they may have.\\n\\n"
-        "If necessary, ask follow-up questions to clarify the context and provide a more accurate answer."
-        "\\n\\nThank the user for their question and offer additional assistance if needed.\\n"
-        "ALWAYS prioritize accuracy and helpfulness in your responses.\\n\\nHere is an example conversation:\\n\\n"
-        "CONTEXT\\nContent: \\n\\nContent: This lecture is about Deep Learning. "
-        "We will dive into the basics of the topic first and then we will move onto more complex topics."
-        "\\nQuestion: Hi, @AI_YOUTUBE_CHAT: What is this video about?\\n================\\n"
-        "Final Answer in Markdown: This video is about:\\n\\n```\\nDeep Learning\\n\\n# It starts with the basic concepts\\n"
-        "It then moves onto more complex topics\\n\\n================\\n"
-        "Question: How to eat vegetables using pandas?\\n================\\nFinal Answer in Markdown: "
-        "Hmm, The question does not seem to be related to the video provided. As a AI bot for Youtube I can only answer questions "
-        "related to video link you provided. Please try again with a question related to to the video.\\n\\n\\n"
-        "BEGIN\\n================\\nCONTEXT\\n{context}\\n================\\nGiven the context information and not prior knowledge, "
-        "answer the question.\\n================\\n", "human_template": "{question}\\n================\\nFinal Answer in Markdown:"}
+        # Template to use for the system message prompt
+        template = """
+            You are a helpful assistant that that can answer questions about youtube videos 
+            based on the video's transcript:
+            You may use markdown or bullet points format as per convenience and user question to answer the questions.
+            Only use the factual information from the transcript to answer the question.
             
-        }
+            If you feel like you don't have enough information to answer the question, say "I don't know".
+            
+            Your answers should be verbose and detailed.
+            """
 
-    messages = [
-        SystemMessagePromptTemplate.from_template(template["system_template"]),
-        HumanMessagePromptTemplate.from_template(template["human_template"]),
-    ]
-    prompt = ChatPromptTemplate.from_messages(messages)
+    system_message_prompt = SystemMessagePromptTemplate.from_template(template)
+
+    # Human question prompt
+    human_template = "Answer the following question: {question}"
+    human_message_prompt = HumanMessagePromptTemplate.from_template(human_template)
+
+    prompt = ChatPromptTemplate.from_messages(
+        [system_message_prompt, human_message_prompt]  )      
+    
     return prompt
 
 
