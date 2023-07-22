@@ -51,7 +51,7 @@ def ytchat():
         if video_url[0:24]=='https://www.youtube.com/':
             video_url=video_url
         else:
-            video_url = video_url.split('youtu.be/')[-1]
+            video_url = "https://www.youtube.com/watch?v=" + video_url.split('youtu.be/')[-1]
     
         if st.button("Process"):
             try:

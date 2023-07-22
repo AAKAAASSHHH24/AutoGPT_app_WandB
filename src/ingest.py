@@ -58,7 +58,7 @@ def chunk_documents(
     Args:
         documents: A transcript to split into chunks
         chunk_size (int, optional): The size of each chunk. Defaults to 500.
-        chunk_overlap (int, optional): The number of tokens to overlap between chunks. Defaults to 0.
+        chunk_overlap (int, optional): The number of tokens to overlap between chunks. Defaults to 100.
 
     Returns:
         List[Document]: A list of chunked documents.
