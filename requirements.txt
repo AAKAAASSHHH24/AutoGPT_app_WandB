@@ -1,4 +1,4 @@
-langchain==0.0.138
+langchain
 streamlit
 streamlit-chat
 streamlit-extras
