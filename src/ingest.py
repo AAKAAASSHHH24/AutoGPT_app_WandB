@@ -1,4 +1,4 @@
-"""Ingest a directory of documentation files into a vector store and store the relevant artifacts in Weights & Biases"""
+"""Ingest a directory of Youtube transcripts into a vector store and store the relevant artifacts in Weights & Biases"""
 import argparse
 import json
 import logging
@@ -10,7 +10,7 @@ import youtube_dl
 
 import langchain
 import wandb
-from langchain.cache import SQLiteCache
+#from langchain.cache import SQLiteCache
 from langchain.docstore.document import Document
 from langchain.document_loaders import YoutubeLoader
 from langchain.embeddings import OpenAIEmbeddings
@@ -19,7 +19,6 @@ from langchain.vectorstores import Chroma
 
 from dotenv import find_dotenv, load_dotenv
 
-langchain.llm_cache = SQLiteCache(database_path="langchain.db")
 
 logger = logging.getLogger(__name__)
 
@@ -115,7 +114,7 @@ def log_index(vector_store_dir: str, run: "wandb.run"):
         vector_store_dir (str): The directory containing the vector store to log
         run (wandb.run): The wandb run to log the artifact to.
     """
-    index_artifact = wandb.Artifact(name="vector_store", type="search_index")
+    index_artifact = wandb.Artifact(name="vector_store_artifact", type="search_index")
     index_artifact.add_dir(vector_store_dir)
     run.log_artifact(index_artifact)
 
@@ -127,7 +126,7 @@ def log_prompt(prompt: dict, run: "wandb.run"):
         prompt (str): The prompt to log
         run (wandb.run): The wandb run to log the artifact to.
     """
-    prompt_artifact = wandb.Artifact(name="chat_prompt", type="prompt")
+    prompt_artifact = wandb.Artifact(name="chat_prompt_artifact", type="prompt")
     with prompt_artifact.new_file("prompt.json") as f:
         f.write(json.dumps(prompt))
     run.log_artifact(prompt_artifact)
@@ -151,8 +150,10 @@ def ingest_data(
     """
     # load the documents
     documents = load_documents(video_url)
+
     # split the documents into chunks
     split_documents = chunk_documents(documents, chunk_size, chunk_overlap)
+
     # create document embeddings and store them in a vector store
     vector_store = create_vector_store(split_documents, vector_store_path)
     return split_documents, vector_store
@@ -174,30 +175,47 @@ def get_parser():
     parser.add_argument(
         "--chunk_overlap",
         type=int,
-        default=0,
+        default=100,
         help="The number of tokens to overlap between document chunks",
     )
     parser.add_argument(
-        "--vector_store",
+        "--vector_store_artifact",
         type=str,
         default="./vector_store",
-        help="The directory to save or load the FAISS db to/from",
+        help="The directory to save or load the CHROMA db to/from",
     )
     parser.add_argument(
-        "--prompt_file",
+        "--chat_prompt_artifact",
         type=pathlib.Path,
         default="./chat_prompt.json",
         help="The path to the chat prompt to use",
     )
     parser.add_argument(
         "--wandb_project",
-        default="llmapps",
+        default="ytchat",
         type=str,
         help="The wandb project to use for storing artifacts",
     )
+    parser.add_argument(
+        "--model_name",
+        default="gpt-3.5-turbo",
+        type=str,
+        help="The llm model used for chatting",
+    )
+    parser.add_argument(
+        "--chat_temperature",
+        default=0.2,
+        type=float,
+        help="Controls randomness of the model",
+    )
+    parser.add_argument(
+        "--max_fallback_retries",
+        default=1,
+        type=int,
+        help="fallback",
+    )
 
     return parser
-
 
 def main(video_url):
     parser = get_parser()
@@ -208,12 +226,11 @@ def main(video_url):
         video_url=video_url,
         chunk_size=args.chunk_size,
         chunk_overlap=args.chunk_overlap,
-        vector_store_path=args.vector_store,
+        vector_store_path=args.vector_store_artifact,
     )
     log_dataset(documents, run)
-    log_index(args.vector_store, run)
-    log_prompt(json.load(args.prompt_file.open("r")), run)
-    run.finish()
+    log_index(args.vector_store_artifact, run)
+    log_prompt(json.load(args.chat_prompt_artifact.open("r")), run)
 
 
 #if __name__ == "__main__":

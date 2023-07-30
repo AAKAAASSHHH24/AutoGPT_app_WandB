@@ -157,3 +157,5 @@ with response_container:
             message(st.session_state['past'][i], is_user=True, key=str(i) + '_user')
             message(st.session_state["generated"][i], key=str(i))
                 
+
+# use langchain==0.0.138
